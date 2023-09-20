@@ -89,7 +89,7 @@ export default function App() {
           {taskItems.map((item) => (
             <TaskComponent
               key={item.id}
-              text={item.title + " " + deletingLoadingList[item.id]}
+              text={item.title}
               isCompleted={item.isCompleted}
               onComplete={() => completeTask(item.id)}
               onDelete={() => deleteTask(item.id)}
