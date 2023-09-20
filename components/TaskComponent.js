@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-// import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const TaskComponent = (props) => {
     const { text, isCompleted, onComplete, onDelete, completingTask, deletingTask } = props;
@@ -14,9 +14,8 @@ const TaskComponent = (props) => {
                         {completingTask ? (
                             <ActivityIndicator size="small" color="#fff" />
                         ) : (
-                            <Text testID="complete-button">Sil</Text>
-
-                            // <MaterialIcons name="check" size={24} color="#fff" onPress={onComplete} />
+                            // <Text testID="complete-button">Sil</Text>
+                            <MaterialIcons name="check" size={24} color="#fff" onPress={onComplete} />
                         )}
                     </View>
                 ) : (
@@ -41,8 +40,8 @@ const TaskComponent = (props) => {
                 {deletingTask ? (
                     <ActivityIndicator size="small" color="#FF4B4B" />
                 ) : (
-                    <Text testID="delete-button">Sil</Text>
-                    // <MaterialIcons name="delete" size={24} color="#FF4B4B" />
+                    // <Text testID="delete-button">Sil</Text>
+                    <MaterialIcons name="delete" size={24} color="#FF4B4B" />
                 )}
             </TouchableOpacity>
         </View>
