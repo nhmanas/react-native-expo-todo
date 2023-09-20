@@ -85,8 +85,9 @@ export default function App() {
     <View style={styles.container}>
       <View style={styles.tasksWrapper}>
         <Text style={styles.sectionTitle}>Görevlerim</Text>
-        <View style={styles.items}>
+        <View testID="task-component" style={styles.items}>
           {taskItems.map((item) => (
+            // 2. check if added text is displayed here in item.title
             <TaskComponent
               key={item.id}
               text={item.title}
@@ -104,12 +105,14 @@ export default function App() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.writeTaskWrapper}
       >
+        {/* 0. add some text here for unit testing */}
         <TextInput
           style={styles.input}
           placeholder={'Yeni Görev'}
           onChangeText={text => setTask(text)}
           value={task}
         />
+        {/* 1. press on this button to add data to taskItems */}
         <TouchableOpacity
           onPress={() => handleAddTask()}
           disabled={addingTask} // Disable button while loading
