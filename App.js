@@ -2,26 +2,40 @@ import React, { useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import TaskComponent from './components/TaskComponent';
 import SingleTask from './objects/SingleTask';
+import { ActivityIndicator } from 'react-native';
 
 export default function App() {
   const [task, setTask] = useState('');
   const [taskItems, setTaskItems] = useState([]);
+  const [addingTask, setAddingTask] = useState(false);
+  const [deletingLoadingList, setDeletingLoadingList] = useState([]);
+  const [completeLoadingList, setCompleteLoadingList] = useState([]);
+
 
   const addTaskWithDelay = () => {
     return new Promise((resolve) => {
+      setAddingTask(true); // Start loading
       setTimeout(() => {
         if (task.trim() !== '') {
           const newTask = new SingleTask(Date.now().toString(), task, false);
           setTaskItems([...taskItems, newTask]);
           setTask('');
+          deletingLoadingList[newTask.id] = false;
+          setDeletingLoadingList(deletingLoadingList)
+          completeLoadingList[newTask.id] = false;
+          setCompleteLoadingList(completeLoadingList)
           resolve();
         }
-      }, 1000); 
+        setAddingTask(false); // Stop loading
+      }, 1000); // 1-second delay
     });
   };
 
-  const completeTaskWithDelay = (taskId) => {
-    return new Promise((resolve) => {
+  const completeTaskWithDelay = async (taskId) => {
+
+    completeLoadingList[taskId] = true;
+    setCompleteLoadingList({ ...completeLoadingList });
+    const result = await new Promise((resolve) => {
       setTimeout(() => {
         const updatedTasks = taskItems.map((item) => {
           if (item.id === taskId) {
@@ -32,19 +46,27 @@ export default function App() {
         });
         setTaskItems(updatedTasks);
         resolve();
-      }, 1000); 
+      }, 1000); // 1-second delay
+    }).then(result => {
+      completeLoadingList[taskId] = false;
+      setCompleteLoadingList({ ...completeLoadingList });
+      return;
     });
-  };
 
-  const deleteTaskWithDelay = (taskId) => {
-    return new Promise((resolve) => {
+  };
+  const deleteTaskWithDelay = async (taskId) => {
+    deletingLoadingList[taskId] = true;
+    setDeletingLoadingList({ ...deletingLoadingList });
+
+    await new Promise((resolve) => {
       setTimeout(() => {
         const updatedTasks = taskItems.filter((item) => item.id !== taskId);
         setTaskItems(updatedTasks);
         resolve();
-      }, 1000); 
+      }, 1000);
     });
   };
+
 
   const handleAddTask = async () => {
     Keyboard.dismiss();
@@ -67,12 +89,15 @@ export default function App() {
           {taskItems.map((item) => (
             <TaskComponent
               key={item.id}
-              text={item.title}
+              text={item.title + " " + deletingLoadingList[item.id]}
               isCompleted={item.isCompleted}
               onComplete={() => completeTask(item.id)}
               onDelete={() => deleteTask(item.id)}
+              completingTask={completeLoadingList[item.id]} // Pass completingTask as a prop
+              deletingTask={deletingLoadingList[item.id]} // Pass deletingTask as a prop
             />
           ))}
+
         </View>
       </View>
       <KeyboardAvoidingView
@@ -81,19 +106,27 @@ export default function App() {
       >
         <TextInput
           style={styles.input}
-          placeholder={'New task'}
+          placeholder={'Yeni Görev'}
           onChangeText={text => setTask(text)}
           value={task}
         />
-        <TouchableOpacity onPress={() => handleAddTask()} >
+        <TouchableOpacity
+          onPress={() => handleAddTask()}
+          disabled={addingTask} // Disable button while loading
+        >
           <View style={styles.addWrapper}>
-            <Text style={styles.addText}>+</Text>
+            {addingTask ? (
+              <ActivityIndicator size="small" color="#55BCF6" />
+            ) : (
+              <Text style={styles.addText}>+</Text>
+            )}
           </View>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
