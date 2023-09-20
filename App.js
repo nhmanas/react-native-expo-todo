@@ -1,36 +1,63 @@
 import React, { useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import TaskComponent from './components/TaskComponent';
-import SingleTask from './objects/SingleTask'
+import SingleTask from './objects/SingleTask';
 
 export default function App() {
   const [task, setTask] = useState('');
   const [taskItems, setTaskItems] = useState([]);
 
-  const handleAddTask = () => {
-    Keyboard.dismiss();
-    if (task.trim() !== '') {
-      const newTask = new SingleTask(Date.now().toString(), task, false);
-      setTaskItems([...taskItems, newTask]);
-      setTask('');
-    }
-  }
-
-  const completeTask = (taskId) => {
-    const updatedTasks = taskItems.map((item) => {
-      if (item.id === taskId) {
-        return { ...item, isCompleted: !item.isCompleted };
-      } else {
-        return item;
-      }
+  const addTaskWithDelay = () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (task.trim() !== '') {
+          const newTask = new SingleTask(Date.now().toString(), task, false);
+          setTaskItems([...taskItems, newTask]);
+          setTask('');
+          resolve();
+        }
+      }, 1000); 
     });
-    setTaskItems(updatedTasks);
-  }
+  };
 
-  const deleteTask = (taskId) => {
-    const updatedTasks = taskItems.filter((item) => item.id !== taskId);
-    setTaskItems(updatedTasks);
-  }
+  const completeTaskWithDelay = (taskId) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const updatedTasks = taskItems.map((item) => {
+          if (item.id === taskId) {
+            return { ...item, isCompleted: !item.isCompleted };
+          } else {
+            return item;
+          }
+        });
+        setTaskItems(updatedTasks);
+        resolve();
+      }, 1000); 
+    });
+  };
+
+  const deleteTaskWithDelay = (taskId) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const updatedTasks = taskItems.filter((item) => item.id !== taskId);
+        setTaskItems(updatedTasks);
+        resolve();
+      }, 1000); 
+    });
+  };
+
+  const handleAddTask = async () => {
+    Keyboard.dismiss();
+    await addTaskWithDelay();
+  };
+
+  const completeTask = async (taskId) => {
+    await completeTaskWithDelay(taskId);
+  };
+
+  const deleteTask = async (taskId) => {
+    await deleteTaskWithDelay(taskId);
+  };
 
   return (
     <View style={styles.container}>
