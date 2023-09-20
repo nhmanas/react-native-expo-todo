@@ -1,22 +1,35 @@
 import React, { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Task from './components/Task'
+import TaskComponent from './components/TaskComponent';
+import SingleTask from './objects/SingleTask'
 
 export default function App() {
-  const [task, setTask] = useState();
+  const [task, setTask] = useState('');
   const [taskItems, setTaskItems] = useState([]);
 
   const handleAddTask = () => {
     Keyboard.dismiss();
-    setTaskItems([...taskItems, task]);
-    setTask(null);
+    if (task.trim() !== '') {
+      const newTask = new SingleTask(Date.now().toString(), task, false);
+      setTaskItems([...taskItems, newTask]);
+      setTask('');
+    }
   }
 
-  const completeTask = (index) => {
-    let itemsCopy = [...taskItems];
-    itemsCopy.splice(index, 1);
-    setTaskItems(itemsCopy);
+  const completeTask = (taskId) => {
+    const updatedTasks = taskItems.map((item) => {
+      if (item.id === taskId) {
+        return { ...item, isCompleted: !item.isCompleted };
+      } else {
+        return item;
+      }
+    });
+    setTaskItems(updatedTasks);
+  }
+
+  const deleteTask = (taskId) => {
+    const updatedTasks = taskItems.filter((item) => item.id !== taskId);
+    setTaskItems(updatedTasks);
   }
 
   return (
@@ -24,22 +37,27 @@ export default function App() {
       <View style={styles.tasksWrapper}>
         <Text style={styles.sectionTitle}>Görevlerim</Text>
         <View style={styles.items}>
-          {
-            taskItems.map((item, index) => {
-              return (
-                <TouchableOpacity key={index} onPress={() => completeTask(index)}>
-                  <Task key={index} text={item} />
-                </TouchableOpacity>
-              );
-            })
-          }
+          {taskItems.map((item) => (
+            <TaskComponent
+              key={item.id}
+              text={item.title}
+              isCompleted={item.isCompleted}
+              onComplete={() => completeTask(item.id)}
+              onDelete={() => deleteTask(item.id)}
+            />
+          ))}
         </View>
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.writeTaskWrapper}
       >
-        <TextInput style={styles.input} placeholder={'Yeni görev'} onChangeText={text => setTask(text)} value={task} />
+        <TextInput
+          style={styles.input}
+          placeholder={'New task'}
+          onChangeText={text => setTask(text)}
+          value={task}
+        />
         <TouchableOpacity onPress={() => handleAddTask()} >
           <View style={styles.addWrapper}>
             <Text style={styles.addText}>+</Text>
