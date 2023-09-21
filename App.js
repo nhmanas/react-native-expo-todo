@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import TaskComponent from './components/TaskComponent';
 import SingleTask from './objects/SingleTask';
 import { ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function App() {
   const [task, setTask] = useState('');
@@ -11,26 +13,64 @@ export default function App() {
   const [deletingLoadingList, setDeletingLoadingList] = useState([]);
   const [completeLoadingList, setCompleteLoadingList] = useState([]);
   const [starLoadingList, setStarLoadingList] = useState([]);
+  
+  useEffect(() => {
+    // Load task data from AsyncStorage when the component mounts
+    loadTaskData().then((loadedTasks) => {
+      if (loadedTasks.length > 0) {
+        setTaskItems(loadedTasks);
+      }
+    });
+  }, []); // Empty dependency array to run only once
 
 
-  const addTaskWithDelay = () => {
-    return new Promise((resolve) => {
+
+  const saveTaskData = async (tasks) => {
+    try {
+      await AsyncStorage.setItem('taskData', JSON.stringify(tasks));
+    } catch (error) {
+      console.error('Error saving task data: ', error);
+    }
+  };
+  
+  const loadTaskData = async () => {
+    try {
+      const storedData = await AsyncStorage.getItem('taskData');
+      if (storedData !== null) {
+        console.log(JSON.parse(storedData));
+        return JSON.parse(storedData);
+      }
+    } catch (error) {
+      console.error('Error loading task data: ', error);
+    }
+    return []; // Return an empty array if there's no stored data
+  };
+  
+
+  const addTaskWithDelay = async () => {
+    return new Promise(async (resolve) => {
       setAddingTask(true); // Start loading
-      setTimeout(() => {
+      setTimeout(async () => {
         if (task.trim() !== '') {
           const newTask = new SingleTask(Date.now().toString(), task, false);
-          setTaskItems([...taskItems, newTask]);
+          const updatedTasks = [...taskItems, newTask];
+          setTaskItems(updatedTasks);
           setTask('');
           deletingLoadingList[newTask.id] = false;
-          setDeletingLoadingList(deletingLoadingList)
+          setDeletingLoadingList(deletingLoadingList);
           completeLoadingList[newTask.id] = false;
-          setCompleteLoadingList(completeLoadingList)
+          setCompleteLoadingList(completeLoadingList);
+  
+          // Save the updated tasks to AsyncStorage
+          await saveTaskData(updatedTasks);
+  
           resolve();
         }
         setAddingTask(false); // Stop loading
       }, 1000); // 1-second delay
     });
   };
+  
 
   const completeTaskWithDelay = async (taskId) => {
 
@@ -46,6 +86,7 @@ export default function App() {
           }
         });
         setTaskItems(updatedTasks);
+        saveTaskData(updatedTasks);
         resolve();
       }, 1000); // 1-second delay
     }).then(result => {
@@ -70,6 +111,7 @@ export default function App() {
           }
         });
         setTaskItems(updatedTasks);
+        saveTaskData(updatedTasks);
         resolve();
       }, 1000); // 1-second delay
     }).then(result => {
@@ -88,6 +130,8 @@ export default function App() {
       setTimeout(() => {
         const updatedTasks = taskItems.filter((item) => item.id !== taskId);
         setTaskItems(updatedTasks);
+        saveTaskData(updatedTasks);
+
         resolve();
       }, 1000);
     });
