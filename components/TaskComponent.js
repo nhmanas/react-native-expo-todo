@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'rea
 import { MaterialIcons } from '@expo/vector-icons';
 
 const TaskComponent = (props) => {
-    const { text, isCompleted, onComplete, onDelete, completingTask, deletingTask } = props;
+    const { text, isCompleted, onComplete, onDelete, onStar, starringTask, isStarred, completingTask, deletingTask } = props;
 
     return (
         <View style={styles.item}>
@@ -27,6 +27,31 @@ const TaskComponent = (props) => {
                         {completingTask ? (
                             <ActivityIndicator size="small" color="#55BCF6" />
                         ) : null}
+                    </TouchableOpacity>
+                )}
+                {isStarred ? (
+                    <TouchableOpacity
+                        style={styles.iconContainer}
+                        onPress={onStar}
+                        disabled={starringTask}
+                    >
+                        {starringTask ? (
+                            <ActivityIndicator size="small" color="#55BCF6" />
+                        ) : (
+                            <MaterialIcons name="star" size={24} color="#FFD700" onPress={onStar} />
+                        )}
+                    </TouchableOpacity>
+                ) : (
+                    <TouchableOpacity
+                        style={styles.iconContainer}
+                        onPress={onStar}
+                        disabled={starringTask}
+                    >
+                        {starringTask ? (
+                            <ActivityIndicator size="small" color="#55BCF6" />
+                        ) : (
+                            <MaterialIcons name="star-border" size={24} color="#55BCF6" />
+                        )}
                     </TouchableOpacity>
                 )}
                 <Text style={[styles.itemText, { textDecorationLine: isCompleted ? 'line-through' : 'none' }]}>
@@ -87,7 +112,10 @@ const styles = StyleSheet.create({
     completedSquare: {
         backgroundColor: '#55BCF6',
     },
-
+    iconContainer: {
+        width:24,
+        marginRight: 8
+    }
 });
 
 export default TaskComponent;

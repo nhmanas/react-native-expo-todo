@@ -10,6 +10,7 @@ export default function App() {
   const [addingTask, setAddingTask] = useState(false);
   const [deletingLoadingList, setDeletingLoadingList] = useState([]);
   const [completeLoadingList, setCompleteLoadingList] = useState([]);
+  const [starLoadingList, setStarLoadingList] = useState([]);
 
 
   const addTaskWithDelay = () => {
@@ -54,6 +55,31 @@ export default function App() {
     });
 
   };
+
+  const starTaskWithDelay = async (taskId) => {
+
+    starLoadingList[taskId] = true;
+    setStarLoadingList({ ...starLoadingList });
+    const result = await new Promise((resolve) => {
+      setTimeout(() => {
+        const updatedTasks = taskItems.map((item) => {
+          if (item.id === taskId) {
+            return { ...item, isStarred: !item.isStarred };
+          } else {
+            return item;
+          }
+        });
+        setTaskItems(updatedTasks);
+        resolve();
+      }, 1000); // 1-second delay
+    }).then(result => {
+      starLoadingList[taskId] = false;
+      setStarLoadingList({ ...starLoadingList });
+      return;
+    });
+
+  };
+
   const deleteTaskWithDelay = async (taskId) => {
     deletingLoadingList[taskId] = true;
     setDeletingLoadingList({ ...deletingLoadingList });
@@ -67,6 +93,14 @@ export default function App() {
     });
   };
 
+  const sortTasks = (tasks) => {
+    // Sort tasks so that starred tasks come first
+    const starredTasks = tasks.filter((item) => item.isStarred);
+    const unstarredTasks = tasks.filter((item) => !item.isStarred);
+    return [...starredTasks, ...unstarredTasks];
+  };
+  
+
 
   const handleAddTask = async () => {
     Keyboard.dismiss();
@@ -75,6 +109,10 @@ export default function App() {
 
   const completeTask = async (taskId) => {
     await completeTaskWithDelay(taskId);
+  };
+
+  const starTask = async (taskId) => {
+    await starTaskWithDelay(taskId);
   };
 
   const deleteTask = async (taskId) => {
@@ -86,20 +124,22 @@ export default function App() {
       <View style={styles.tasksWrapper}>
         <Text style={styles.sectionTitle}>Görevlerim</Text>
         <View testID="task-component" style={styles.items}>
-          {taskItems.map((item) => (
-            // 2. check if added text is displayed here in item.title
-            <TaskComponent
-              key={item.id}
-              text={item.title}
-              isCompleted={item.isCompleted}
-              onComplete={() => completeTask(item.id)}
-              onDelete={() => deleteTask(item.id)}
-              completingTask={completeLoadingList[item.id]} // Pass completingTask as a prop
-              deletingTask={deletingLoadingList[item.id]} // Pass deletingTask as a prop
-            />
-          ))}
+  {sortTasks(taskItems).map((item) => (
+    <TaskComponent
+      key={item.id}
+      text={item.title}
+      isCompleted={item.isCompleted}
+      isStarred={item.isStarred}
+      onComplete={() => completeTask(item.id)}
+      onDelete={() => deleteTask(item.id)}
+      onStar={() => starTask(item.id)}
+      completingTask={completeLoadingList[item.id]}
+      deletingTask={deletingLoadingList[item.id]}
+      starringTask={starLoadingList[item.id]}
+    />
+  ))}
+</View>
 
-        </View>
       </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
